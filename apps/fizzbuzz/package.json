@@ -1,0 +1,17 @@
+{
+  "name": "fizzbuzz",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "test": "vp test",
+    "coverage": "vp test --coverage",
+    "check": "vp check --fix"
+  },
+  "devDependencies": {
+    "typedoc": "^0.28.16",
+    "typedoc-plugin-mermaid": "^1.12.0",
+    "typedoc-vite": "workspace:*",
+    "vite": "^8.0.13",
+    "vitest": "^4.1.6"
+  }
+}

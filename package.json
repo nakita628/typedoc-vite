@@ -1,0 +1,17 @@
+{
+  "name": "typedoc-vite-monorepo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deps": "mkdir -p /tmp/pnpm-store && pnpm config set store-dir /tmp/pnpm-store && rm -rf node_modules && rm -rf pnpm-lock.yaml && rm -rf ~/.pnpm-store && pnpm store prune && pnpm install --no-prefer-frozen-lockfile",
+    "check": "vp check --fix",
+    "coverage": "vp test --coverage",
+    "build": "pnpm -F typedoc-vite build",
+    "release": "pnpm -F typedoc-vite release"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.6",
+    "vite-plus": "^0.1.21"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

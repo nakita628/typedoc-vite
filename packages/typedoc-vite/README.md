@@ -1,4 +1,4 @@
-# typedoc-vite
+# typedocVite
 
 A Vite plugin that generates [TypeDoc](https://typedoc.org/) documentation with HMR.
 

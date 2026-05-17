@@ -28,16 +28,12 @@ export function typedocVite(
     options.exclude ?? (['**/node_modules/**', '**/dist/**', '**/*.test.ts', '**/*.d.ts'] as const)
   const watch = options.watch ?? ['src/**/*.{ts,tsx,mts,cts}']
   const debounceMs = options.debounceMs ?? 200
-  const serve = (() => {
-    if (options.serve === false) return false
-    const raw = options.serve?.base ?? '/'
-    const withLeading = raw.startsWith('/') ? raw : `/${raw}`
-    const base = withLeading.endsWith('/') ? withLeading : `${withLeading}/`
-    return { base }
-  })()
+  const serve =
+    options.serve === false ? false : { base: normalizeBase(options.serve?.base ?? '/') }
   const typedoc = options.typedoc ?? {}
 
   const serverRef: { current: ViteDevServer | null } = { current: null }
+  const runPromise: { current: Promise<void> | null } = { current: null }
   const fileHashCache = new Map<string, string>()
 
   const run = async () => {
@@ -74,7 +70,12 @@ export function typedocVite(
   }
 
   const safeRun = () => {
-    run().catch(handleError)
+    const p = run()
+      .catch(handleError)
+      .finally(() => {
+        if (runPromise.current === p) runPromise.current = null
+      })
+    runPromise.current = p
   }
 
   const runDebounced = debounce(debounceMs, safeRun)
@@ -98,7 +99,7 @@ export function typedocVite(
       server.watcher.unwatch(absOut)
       server.watcher.unwatch(`${absOut}/**`)
 
-      if (server.httpServer) {
+      if (server.httpServer && !server.httpServer.listening) {
         server.httpServer.once('listening', safeRun)
       } else {
         setImmediate(safeRun)
@@ -131,6 +132,7 @@ export function typedocVite(
           const file = resolveStaticPath(sub, publicRoot, isHtml)
           if (file === null) return next()
           if (isHtml) {
+            if (runPromise.current) await runPromise.current
             const raw = await fsp.readFile(file, 'utf8')
             const clientTag = `<script type="module" src="${viteBase}@vite/client"></script>`
             const headPattern = /<head(\s[^>]*)?>/i
@@ -160,26 +162,17 @@ export function typedocVite(
   } satisfies Plugin
 }
 
-function debounce(ms: number, fn: () => void) {
-  const state: { id: NodeJS.Timeout | undefined } = { id: undefined }
-  return () => {
-    if (state.id !== undefined) clearTimeout(state.id)
-    state.id = setTimeout(fn, ms)
-  }
+function normalizeBase(raw: string) {
+  const withLeading = raw.startsWith('/') ? raw : `/${raw}`
+  return withLeading.endsWith('/') ? withLeading : `${withLeading}/`
 }
 
-async function detectContentChange(cache: Map<string, string>, filePath: string) {
-  try {
-    const content = await fsp.readFile(filePath, 'utf8')
-    const newHash = crypto.createHash('sha256').update(content).digest('hex')
-    const oldHash = cache.get(filePath)
-    if (oldHash === newHash) return false
-    cache.set(filePath, newHash)
-    return true
-  } catch {
-    cache.delete(filePath)
-    return false
-  }
+function stripBase(urlPath: string, base: string) {
+  if (base === '/') return urlPath
+  const baseNoTrailing = base.slice(0, -1)
+  if (urlPath === baseNoTrailing || urlPath === base) return '/'
+  if (!urlPath.startsWith(base)) return null
+  return `/${urlPath.slice(base.length)}`
 }
 
 function resolveStaticPath(urlPath: string, root: string, addIndex: boolean) {
@@ -196,14 +189,6 @@ function resolveStaticPath(urlPath: string, root: string, addIndex: boolean) {
   const rootWithSep = absRoot.endsWith(path.sep) ? absRoot : `${absRoot}${path.sep}`
   if (file !== absRoot && !file.startsWith(rootWithSep)) return null
   return file
-}
-
-function stripBase(urlPath: string, base: string) {
-  if (base === '/') return urlPath
-  const baseNoTrailing = base.slice(0, -1)
-  if (urlPath === baseNoTrailing || urlPath === base) return '/'
-  if (!urlPath.startsWith(base)) return null
-  return `/${urlPath.slice(base.length)}`
 }
 
 function mimeFor(file: string) {
@@ -230,4 +215,26 @@ function mimeFor(file: string) {
       '.txt': 'text/plain; charset=utf-8',
     }[ext] ?? 'application/octet-stream'
   )
+}
+
+function debounce(ms: number, fn: () => void) {
+  const state: { id: NodeJS.Timeout | undefined } = { id: undefined }
+  return () => {
+    if (state.id !== undefined) clearTimeout(state.id)
+    state.id = setTimeout(fn, ms)
+  }
+}
+
+async function detectContentChange(cache: Map<string, string>, filePath: string) {
+  try {
+    const content = await fsp.readFile(filePath, 'utf8')
+    const newHash = crypto.createHash('sha256').update(content).digest('hex')
+    const oldHash = cache.get(filePath)
+    if (oldHash === newHash) return false
+    cache.set(filePath, newHash)
+    return true
+  } catch {
+    cache.delete(filePath)
+    return false
+  }
 }

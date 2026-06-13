@@ -26,10 +26,10 @@
     "release": "pnpm build && pnpm publish"
   },
   "dependencies": {
-    "typedoc": "^0.28.16"
+    "typedoc": "^0.28.19"
   },
   "devDependencies": {
-    "tsdown": "^0.18.0",
-    "vite": "^8.0.13"
+    "tsdown": "^0.22.2",
+    "vite": "^8.0.16"
   }
 }

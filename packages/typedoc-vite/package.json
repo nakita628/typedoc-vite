@@ -1,6 +1,6 @@
 {
   "name": "typedoc-vite",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A Vite plugin that generates TypeDoc documentation with HMR.",
   "keywords": [
     "typedoc",

@@ -10,8 +10,8 @@
     "release": "pnpm -F typedoc-vite release"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.1.6",
-    "vite-plus": "^0.1.21"
+    "@vitest/coverage-v8": "^4.1.8",
+    "vite-plus": "^0.1.24"
   },
-  "packageManager": "pnpm@10.33.0"
+  "packageManager": "pnpm@11.6.0"
 }

@@ -6,14 +6,14 @@
     "typedoc",
     "vite"
   ],
+  "homepage": "https://github.com/nakita628/typedoc-vite",
+  "bugs": {
+    "url": "https://github.com/nakita628/typedoc-vite/issues"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nakita628/typedoc-vite.git"
-  },
-  "homepage": "https://github.com/nakita628/typedoc-vite",
-  "bugs": {
-    "url": "https://github.com/nakita628/typedoc-vite/issues"
   },
   "files": [
     "dist",
